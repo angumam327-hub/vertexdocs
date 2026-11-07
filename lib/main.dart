@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'app.dart';
+import 'services/auth_service.dart';
+import 'services/profile_service.dart';
 import 'services/storage_service.dart';
 
 void main() async {
@@ -16,8 +18,10 @@ void main() async {
     ),
   );
 
-  // Initialize persistent storage
+  // Initialize persistent storage, profile, and authentication
   await StorageService().init();
+  await ProfileService().init();
+  await AuthService().init();
 
   runApp(const VertexDocsApp());
 }

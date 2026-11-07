@@ -8,6 +8,7 @@ import '../tools/ai_summarizer_screen.dart';
 import '../tools/compare_pdf_screen.dart';
 import '../tools/compress_pdf_screen.dart';
 import '../tools/crop_pdf_screen.dart';
+import '../tools/document_editor_screen.dart';
 import '../tools/edit_pdf_screen.dart';
 import '../tools/excel_to_pdf_screen.dart';
 import '../tools/explain_pdf_screen.dart';
@@ -21,6 +22,7 @@ import '../tools/ocr_pdf_screen.dart';
 import '../tools/ocr_screen.dart';
 import '../tools/organize_pdf_screen.dart';
 import '../tools/page_numbers_screen.dart';
+import '../tools/pdf_editor_screen.dart';
 import '../tools/pdf_forms_screen.dart';
 import '../tools/pdf_qa_screen.dart';
 import '../tools/pdf_to_excel_screen.dart';
@@ -37,7 +39,9 @@ import '../tools/repair_pdf_screen.dart';
 import '../tools/rotate_pdf_screen.dart';
 import '../tools/scan_to_pdf_screen.dart';
 import '../tools/sign_pdf_screen.dart';
+import '../tools/smart_compressor_screen.dart';
 import '../tools/split_pdf_screen.dart';
+import '../tools/translate_document_screen.dart';
 import '../tools/translate_pdf_screen.dart';
 import '../tools/unlock_pdf_screen.dart';
 import '../tools/watermark_screen.dart';
@@ -77,6 +81,9 @@ class ToolRouter {
         break;
 
       // --- B. Optimize PDF ---
+      case AppConstants.toolSmartCompressor:
+        screen = SmartCompressorScreen(initialFile: file);
+        break;
       case AppConstants.toolCompress:
         screen = CompressPdfScreen(initialFile: file);
         break;
@@ -149,6 +156,12 @@ class ToolRouter {
         break;
 
       // --- E. Edit PDF ---
+      case AppConstants.toolPdfEditor:
+        screen = PdfEditorScreen(initialFile: file);
+        break;
+      case AppConstants.toolDocumentEditor:
+        screen = DocumentEditorScreen(initialFile: file);
+        break;
       case AppConstants.toolEdit:
         screen = EditPdfScreen(initialFile: file);
         break;
@@ -174,6 +187,9 @@ class ToolRouter {
         break;
       case AppConstants.toolTranslatePdf:
         screen = TranslatePdfScreen(initialFile: file);
+        break;
+      case AppConstants.toolTranslateDocument:
+        screen = TranslateDocumentScreen(initialFile: file);
         break;
       case AppConstants.toolExtractText:
         screen = OcrScreen(initialFile: file);

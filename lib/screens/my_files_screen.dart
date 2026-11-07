@@ -12,6 +12,18 @@ import '../widgets/pdf_file_card.dart';
 import '../widgets/search_bar_widget.dart';
 import 'pdf_preview_screen.dart';
 
+enum FileSortOption {
+  dateDesc('Date: Newest First'),
+  dateAsc('Date: Oldest First'),
+  nameAsc('Name: A to Z'),
+  nameDesc('Name: Z to A'),
+  sizeDesc('Size: Largest First'),
+  sizeAsc('Size: Smallest First');
+
+  final String label;
+  const FileSortOption(this.label);
+}
+
 class MyFilesScreen extends StatefulWidget {
   const MyFilesScreen({super.key});
 
@@ -23,13 +35,17 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _selectedFilter = 'All';
+  FileSortOption _currentSort = FileSortOption.dateDesc;
   int _totalBytesUsed = 0;
 
   final List<String> _filters = const [
     'All',
+    'Original',
+    'Translated',
+    'Compressed',
+    'Edited',
     'Merged',
     'Split',
-    'Compressed',
     'Protected',
     'Unlocked',
     'Watermarked',
@@ -71,6 +87,57 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
     }
   }
 
+  void _showSortDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+              child: Text(
+                'Sort Files By',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            const Divider(),
+            ...FileSortOption.values.map((opt) {
+              final isSel = _currentSort == opt;
+              return ListTile(
+                title: Text(
+                  opt.label,
+                  style: GoogleFonts.inter(
+                    fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
+                    color: isSel ? AppColors.primary : AppColors.textPrimary,
+                  ),
+                ),
+                trailing: isSel
+                    ? const Icon(Icons.check_circle_rounded,
+                        color: AppColors.primary)
+                    : null,
+                onTap: () {
+                  setState(() => _currentSort = opt);
+                  Navigator.pop(ctx);
+                },
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,6 +153,11 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.sort_rounded, color: AppColors.primary),
+            tooltip: 'Sort Files',
+            onPressed: _showSortDialog,
+          ),
+          IconButton(
             icon: const Icon(Icons.add_rounded,
                 color: AppColors.primary, size: 28),
             tooltip: 'Import PDF',
@@ -99,10 +171,41 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
           final filteredList = savedFiles.where((f) {
             final matchesSearch = _searchQuery.isEmpty ||
                 f.name.toLowerCase().contains(_searchQuery);
-            final matchesFilter = _selectedFilter == 'All' ||
-                f.operationType.toLowerCase() == _selectedFilter.toLowerCase();
+
+            bool matchesFilter = false;
+            if (_selectedFilter == 'All') {
+              matchesFilter = true;
+            } else if (_selectedFilter == 'Original') {
+              matchesFilter = f.operationType.toLowerCase() == 'imported' ||
+                  f.operationType.toLowerCase() == 'original';
+            } else if (_selectedFilter == 'Edited') {
+              matchesFilter = f.operationType.toLowerCase().contains('edited');
+            } else {
+              matchesFilter = f.operationType
+                  .toLowerCase()
+                  .contains(_selectedFilter.toLowerCase());
+            }
+
             return matchesSearch && matchesFilter;
           }).toList();
+
+          // Apply Sorting
+          filteredList.sort((a, b) {
+            switch (_currentSort) {
+              case FileSortOption.dateDesc:
+                return b.lastModified.compareTo(a.lastModified);
+              case FileSortOption.dateAsc:
+                return a.lastModified.compareTo(b.lastModified);
+              case FileSortOption.nameAsc:
+                return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+              case FileSortOption.nameDesc:
+                return b.name.toLowerCase().compareTo(a.name.toLowerCase());
+              case FileSortOption.sizeDesc:
+                return b.size.compareTo(a.size);
+              case FileSortOption.sizeAsc:
+                return a.size.compareTo(b.size);
+            }
+          });
 
           return Column(
             children: [
@@ -171,7 +274,7 @@ class _MyFilesScreenState extends State<MyFilesScreen> {
                               size: 18, color: AppColors.primary),
                           const SizedBox(width: 8),
                           Text(
-                            '${savedFiles.length} Documents',
+                            '${filteredList.length} of ${savedFiles.length} Documents',
                             style: GoogleFonts.inter(
                               fontWeight: FontWeight.w600,
                               fontSize: 13,

@@ -173,6 +173,23 @@ class StorageService {
     await _prefs?.setBool(AppConstants.prefAutoSave, value);
   }
 
+  String getDefaultTranslationLang() {
+    return _prefs?.getString(AppConstants.prefDefaultTranslationLang) ?? 'ta';
+  }
+
+  Future<void> setDefaultTranslationLang(String code) async {
+    await _prefs?.setString(AppConstants.prefDefaultTranslationLang, code);
+  }
+
+  String getDefaultCompressionMode() {
+    return _prefs?.getString(AppConstants.prefDefaultCompressionMode) ??
+        'medium';
+  }
+
+  Future<void> setDefaultCompressionMode(String mode) async {
+    await _prefs?.setString(AppConstants.prefDefaultCompressionMode, mode);
+  }
+
   // --- AI Chat History ---
   static const String _prefChatHistory = 'vertex_chat_history';
 

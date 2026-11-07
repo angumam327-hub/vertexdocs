@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'screens/ai_assistant_screen.dart';
 import 'screens/all_tools_screen.dart';
+import 'screens/auth/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/my_files_screen.dart';
 import 'screens/settings_screen.dart';
+import 'services/auth_service.dart';
 import 'theme/app_theme.dart';
 import 'utils/app_constants.dart';
 import 'widgets/bottom_navigation.dart';
@@ -13,11 +15,18 @@ class VertexDocsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: AppConstants.appName,
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      home: const MainNavigationShell(),
+    return AnimatedBuilder(
+      animation: AuthService(),
+      builder: (context, _) {
+        return MaterialApp(
+          title: AppConstants.appName,
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          home: AuthService().isLoggedIn
+              ? const MainNavigationShell()
+              : const LoginScreen(),
+        );
+      },
     );
   }
 }

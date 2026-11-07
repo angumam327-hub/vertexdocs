@@ -15,6 +15,10 @@ class AppConstants {
   static const String prefGeminiApiKey = 'vertex_gemini_api_key';
   static const String prefAutoSave = 'vertex_auto_save';
   static const String prefDefaultQuality = 'vertex_default_quality';
+  static const String prefDefaultTranslationLang =
+      'vertex_default_translation_lang';
+  static const String prefDefaultCompressionMode =
+      'vertex_default_compression_mode';
 
   // Tool IDs: A. Organize PDF
   static const String toolMerge = 'merge';
@@ -28,6 +32,7 @@ class AppConstants {
 
   // Tool IDs: B. Optimize PDF
   static const String toolCompress = 'compress';
+  static const String toolSmartCompressor = 'smart_compressor';
   static const String toolRepair = 'repair';
   static const String toolOcrPdf = 'ocr_pdf';
   static const String toolScanToPdf = 'scan_to_pdf';
@@ -56,6 +61,8 @@ class AppConstants {
 
   // Tool IDs: E. Edit PDF
   static const String toolEdit = 'edit';
+  static const String toolPdfEditor = 'pdf_editor';
+  static const String toolDocumentEditor = 'document_editor';
   static const String toolAddText = 'add_text';
   static const String toolAddImages = 'add_images';
   static const String toolAddShapes = 'add_shapes';
@@ -65,6 +72,7 @@ class AppConstants {
   // Tool IDs: F. PDF Intelligence
   static const String toolAiSummarizer = 'ai_summarizer';
   static const String toolTranslatePdf = 'translate_pdf';
+  static const String toolTranslateDocument = 'translate_document';
   static const String toolExtractText = 'extract_text';
   static const String toolExtractKeyPoints = 'extract_key_points';
   static const String toolPdfQa = 'pdf_qa';
@@ -165,6 +173,16 @@ final List<PdfToolItem> allPdfTools = [
   ),
 
   // --- B. OPTIMIZE PDF ---
+  const PdfToolItem(
+    id: AppConstants.toolSmartCompressor,
+    title: 'Smart Compressor',
+    description:
+        'Multi-format compression for PDF, Images, Word, PowerPoint & Excel with target size controls',
+    icon: Icons.offline_bolt_rounded,
+    category: 'Optimize PDF',
+    badge: 'Smart',
+    isWorkflow: true,
+  ),
   const PdfToolItem(
     id: AppConstants.toolCompress,
     title: 'Compress PDF',
@@ -363,6 +381,26 @@ final List<PdfToolItem> allPdfTools = [
 
   // --- E. EDIT PDF ---
   const PdfToolItem(
+    id: AppConstants.toolPdfEditor,
+    title: 'PDF Editor Studio',
+    description:
+        'Interactive studio to draw, add text, images, shapes, highlight & signatures with undo/redo',
+    icon: Icons.draw_rounded,
+    category: 'Edit PDF',
+    badge: 'Studio',
+    isWorkflow: true,
+  ),
+  const PdfToolItem(
+    id: AppConstants.toolDocumentEditor,
+    title: 'Document Editor',
+    description:
+        'Live edit Word (.docx) and Text (.txt) documents with rich formatting & PDF export',
+    icon: Icons.edit_document,
+    category: 'Edit PDF',
+    badge: 'DOCX/TXT',
+    isWorkflow: true,
+  ),
+  const PdfToolItem(
     id: AppConstants.toolEdit,
     title: 'Edit PDF',
     description:
@@ -430,6 +468,16 @@ final List<PdfToolItem> allPdfTools = [
     icon: Icons.translate_rounded,
     category: 'PDF Intelligence',
     badge: 'Multilingual',
+    isWorkflow: true,
+  ),
+  const PdfToolItem(
+    id: AppConstants.toolTranslateDocument,
+    title: 'Translate Documents',
+    description:
+        'Translate PDF, DOCX, and TXT across 40+ global languages with dual side-by-side preview',
+    icon: Icons.g_translate_rounded,
+    category: 'PDF Intelligence',
+    badge: '40+ Langs',
     isWorkflow: true,
   ),
   const PdfToolItem(

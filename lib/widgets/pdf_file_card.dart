@@ -5,20 +5,22 @@ import '../theme/app_colors.dart';
 
 class PdfFileCard extends StatelessWidget {
   final PdfFileModel file;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final VoidCallback? onShare;
   final VoidCallback? onDelete;
   final Function(String newName)? onRename;
   final VoidCallback? onPreview;
+  final VoidCallback? onChange;
 
   const PdfFileCard({
     super.key,
     required this.file,
-    required this.onTap,
+    this.onTap,
     this.onShare,
     this.onDelete,
     this.onRename,
     this.onPreview,
+    this.onChange,
   });
 
   void _showRenameDialog(BuildContext context) {
@@ -106,7 +108,7 @@ class PdfFileCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onTap,
+          onTap: onTap ?? onChange,
           borderRadius: BorderRadius.circular(16),
           splashColor: AppColors.secondary,
           child: Padding(
@@ -137,6 +139,7 @@ class PdfFileCard extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         file.name,
@@ -151,46 +154,65 @@ class PdfFileCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Text(
-                            file.formattedSize,
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            width: 3,
-                            height: 3,
-                            decoration: const BoxDecoration(
-                              color: AppColors.textTertiary,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            file.formattedDate,
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              color: AppColors.textTertiary,
+                          Flexible(
+                            child: Text.rich(
+                              TextSpan(
+                                children: [
+                                  if (file.pageCount != null &&
+                                      file.pageCount! > 0) ...[
+                                    TextSpan(
+                                      text:
+                                          '${file.pageCount} ${file.pageCount == 1 ? 'page' : 'pages'} • ',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                  TextSpan(
+                                    text: file.formattedSize,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  if (file.formattedDate.isNotEmpty) ...[
+                                    TextSpan(
+                                      text: ' • ${file.formattedDate}',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11,
+                                        color: AppColors.textTertiary,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           if (file.operationType.isNotEmpty) ...[
                             const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 1),
-                              decoration: BoxDecoration(
-                                color: AppColors.secondaryLight,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                file.operationType,
-                                style: GoogleFonts.inter(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
+                            Flexible(
+                              flex: 0,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: AppColors.secondaryLight,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  file.operationType,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
@@ -201,8 +223,31 @@ class PdfFileCard extends StatelessWidget {
                   ),
                 ),
 
+                // Change button
+                if (onChange != null) ...[
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: onChange,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      'Change',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+
                 // Share button
-                if (onShare != null)
+                if (onChange == null && onShare != null)
                   IconButton(
                     icon: const Icon(
                       Icons.share_outlined,
@@ -214,91 +259,100 @@ class PdfFileCard extends StatelessWidget {
                   ),
 
                 // Popup menu
-                PopupMenuButton<String>(
-                  icon: const Icon(
-                    Icons.more_vert_rounded,
-                    size: 20,
-                    color: AppColors.textSecondary,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'open':
-                        onTap();
-                        break;
-                      case 'preview':
-                        if (onPreview != null) onPreview!();
-                        break;
-                      case 'share':
-                        if (onShare != null) onShare!();
-                        break;
-                      case 'rename':
-                        _showRenameDialog(context);
-                        break;
-                      case 'delete':
-                        _showDeleteDialog(context);
-                        break;
-                    }
-                  },
-                  itemBuilder: (ctx) => [
-                    const PopupMenuItem(
-                      value: 'open',
-                      child: Row(
-                        children: [
-                          Icon(Icons.open_in_new_rounded, size: 18),
-                          SizedBox(width: 10),
-                          Text('Open'),
-                        ],
-                      ),
+                if (onChange == null ||
+                    onRename != null ||
+                    onDelete != null ||
+                    onPreview != null)
+                  PopupMenuButton<String>(
+                    icon: const Icon(
+                      Icons.more_vert_rounded,
+                      size: 20,
+                      color: AppColors.textSecondary,
                     ),
-                    if (onPreview != null)
-                      const PopupMenuItem(
-                        value: 'preview',
-                        child: Row(
-                          children: [
-                            Icon(Icons.visibility_outlined, size: 18),
-                            SizedBox(width: 10),
-                            Text('Preview in App'),
-                          ],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'open':
+                          if (onTap != null) onTap!();
+                          break;
+                        case 'preview':
+                          if (onPreview != null) onPreview!();
+                          break;
+                        case 'share':
+                          if (onShare != null) onShare!();
+                          break;
+                        case 'rename':
+                          _showRenameDialog(context);
+                          break;
+                        case 'delete':
+                          _showDeleteDialog(context);
+                          break;
+                      }
+                    },
+                    itemBuilder: (ctx) => [
+                      if (onTap != null)
+                        const PopupMenuItem(
+                          value: 'open',
+                          child: Row(
+                            children: [
+                              Icon(Icons.open_in_new_rounded, size: 18),
+                              SizedBox(width: 10),
+                              Text('Open'),
+                            ],
+                          ),
                         ),
-                      ),
-                    const PopupMenuItem(
-                      value: 'share',
-                      child: Row(
-                        children: [
-                          Icon(Icons.share_outlined, size: 18),
-                          SizedBox(width: 10),
-                          Text('Share'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'rename',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit_outlined, size: 18),
-                          SizedBox(width: 10),
-                          Text('Rename'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuDivider(),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete_outline_rounded,
-                              size: 18, color: AppColors.error),
-                          SizedBox(width: 10),
-                          Text('Delete',
-                              style: TextStyle(color: AppColors.error)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                      if (onPreview != null)
+                        const PopupMenuItem(
+                          value: 'preview',
+                          child: Row(
+                            children: [
+                              Icon(Icons.visibility_outlined, size: 18),
+                              SizedBox(width: 10),
+                              Text('Preview in App'),
+                            ],
+                          ),
+                        ),
+                      if (onShare != null)
+                        const PopupMenuItem(
+                          value: 'share',
+                          child: Row(
+                            children: [
+                              Icon(Icons.share_outlined, size: 18),
+                              SizedBox(width: 10),
+                              Text('Share'),
+                            ],
+                          ),
+                        ),
+                      if (onRename != null)
+                        const PopupMenuItem(
+                          value: 'rename',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit_outlined, size: 18),
+                              SizedBox(width: 10),
+                              Text('Rename'),
+                            ],
+                          ),
+                        ),
+                      if (onDelete != null) ...[
+                        const PopupMenuDivider(),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_outline_rounded,
+                                  size: 18, color: AppColors.error),
+                              SizedBox(width: 10),
+                              Text('Delete',
+                                  style: TextStyle(color: AppColors.error)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
               ],
             ),
           ),

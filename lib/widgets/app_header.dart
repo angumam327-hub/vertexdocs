@@ -1,7 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/user_profile_model.dart';
+import '../screens/profile_screen.dart';
 import '../services/file_service.dart';
+import '../services/profile_service.dart';
 import '../theme/app_colors.dart';
 
 class AppHeader extends StatelessWidget {
@@ -102,36 +105,90 @@ class AppHeader extends StatelessWidget {
                       ),
                     ],
                   ),
-                  // Pro / AI badge
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.22),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.35),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.auto_awesome,
-                          color: Colors.white,
-                          size: 13,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'AI Ready',
-                          style: GoogleFonts.inter(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                  // Pro / AI badge & Profile Photo
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 9, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.22),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.35),
                           ),
                         ),
-                      ],
-                    ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.auto_awesome,
+                              color: Colors.white,
+                              size: 13,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'AI Ready',
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ProfileScreen(),
+                            ),
+                          );
+                        },
+                        child: ValueListenableBuilder<UserProfileModel>(
+                          valueListenable: ProfileService().profileNotifier,
+                          builder: (context, profile, _) {
+                            final hasPhoto = profile.photoPath != null &&
+                                File(profile.photoPath!).existsSync();
+                            return Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
+                                border:
+                                    Border.all(color: Colors.white, width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.15),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                radius: 17,
+                                backgroundColor: AppColors.secondary,
+                                backgroundImage: hasPhoto
+                                    ? FileImage(File(profile.photoPath!))
+                                    : null,
+                                child: !hasPhoto
+                                    ? const Icon(
+                                        Icons.person_rounded,
+                                        size: 22,
+                                        color: AppColors.primary,
+                                      )
+                                    : null,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

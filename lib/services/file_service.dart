@@ -218,4 +218,41 @@ class FileService {
       debugPrint('Error clearing cache: $e');
     }
   }
+
+  /// Copies a file to the user-accessible Downloads directory
+  Future<String?> downloadFileToDevice(String sourcePath) async {
+    try {
+      final srcFile = File(sourcePath);
+      if (!await srcFile.exists()) return null;
+
+      final fileName = srcFile.path.split(Platform.pathSeparator).last;
+      Directory? targetDir;
+
+      if (Platform.isAndroid) {
+        final dlDir = Directory('/storage/emulated/0/Download');
+        if (await dlDir.exists()) {
+          targetDir = dlDir;
+        } else {
+          final extDirs = await getExternalStorageDirectories(
+              type: StorageDirectory.downloads);
+          if (extDirs != null && extDirs.isNotEmpty) {
+            targetDir = extDirs.first;
+          } else {
+            targetDir = await getExternalStorageDirectory();
+          }
+        }
+      } else if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+        targetDir = await getDownloadsDirectory();
+      }
+
+      targetDir ??= await getApplicationDocumentsDirectory();
+
+      final destPath = '${targetDir.path}${Platform.pathSeparator}$fileName';
+      await srcFile.copy(destPath);
+      return destPath;
+    } catch (e) {
+      debugPrint('Error saving to downloads: $e');
+      return null;
+    }
+  }
 }

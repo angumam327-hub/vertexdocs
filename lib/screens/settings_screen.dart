@@ -1,10 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/user_profile_model.dart';
+import '../services/auth_service.dart';
 import '../services/file_service.dart';
+import '../services/profile_service.dart';
 import '../services/share_service.dart';
 import '../services/storage_service.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_constants.dart';
+import 'profile_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -16,13 +21,49 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final StorageService _storage = StorageService();
   String _currentLanguage = 'en';
+  String _defaultTranslationLang = 'ta';
+  String _defaultCompressionPreset = 'medium';
   bool _autoSave = true;
 
   @override
   void initState() {
     super.initState();
     _currentLanguage = _storage.getLanguage();
+    _defaultTranslationLang = _storage.getDefaultTranslationLang();
+    _defaultCompressionPreset = _storage.getDefaultCompressionMode();
     _autoSave = _storage.getAutoSave();
+  }
+
+  String _getLangName(String code) {
+    switch (code) {
+      case 'ta':
+        return 'Tamil (தமிழ்)';
+      case 'hi':
+        return 'Hindi (हिन्दी)';
+      case 'te':
+        return 'Telugu (తెలుగు)';
+      case 'ml':
+        return 'Malayalam (മലയാളം)';
+      case 'es':
+        return 'Spanish (Español)';
+      case 'fr':
+        return 'French (Français)';
+      case 'de':
+        return 'German (Deutsch)';
+      default:
+        return 'English';
+    }
+  }
+
+  String _getCompressionName(String mode) {
+    switch (mode) {
+      case 'low':
+        return 'Low (High Quality)';
+      case 'high':
+        return 'High (Smallest Size)';
+      default:
+        return 'Medium (Recommended)';
+    }
   }
 
   void _showApiKeyDialog() {
@@ -161,6 +202,93 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // User Profile Summary Card
+            ValueListenableBuilder<UserProfileModel>(
+              valueListenable: ProfileService().profileNotifier,
+              builder: (context, profile, _) {
+                final hasImage = profile.photoPath != null &&
+                    File(profile.photoPath!).existsSync();
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.cardBorder),
+                    boxShadow: AppColors.cardShadow,
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: AppColors.secondary,
+                        backgroundImage: hasImage
+                            ? FileImage(File(profile.photoPath!))
+                            : null,
+                        child: !hasImage
+                            ? Text(
+                                profile.initials,
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 20,
+                                  color: AppColors.primary,
+                                ),
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              profile.name,
+                              style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              profile.email,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            if (profile.bio.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                profile.bio,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: AppColors.textTertiary,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined,
+                            color: AppColors.primary),
+                        tooltip: 'Edit Profile',
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const ProfileScreen()),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+
             // App Branding Card
             Container(
               padding: const EdgeInsets.all(18),
@@ -247,6 +375,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const Divider(height: 1),
               ListTile(
+                leading: const Icon(Icons.g_translate_rounded,
+                    color: AppColors.primary),
+                title: Text('Default Translation Target', style: _titleStyle),
+                subtitle: Text(_getLangName(_defaultTranslationLang),
+                    style: _subStyle),
+                trailing: DropdownButton<String>(
+                  value: _defaultTranslationLang,
+                  underline: const SizedBox.shrink(),
+                  items: const [
+                    DropdownMenuItem(value: 'ta', child: Text('Tamil (தமிழ்)')),
+                    DropdownMenuItem(value: 'en', child: Text('English')),
+                    DropdownMenuItem(
+                        value: 'hi', child: Text('Hindi (हिन्दी)')),
+                    DropdownMenuItem(
+                        value: 'te', child: Text('Telugu (తెలుగు)')),
+                    DropdownMenuItem(
+                        value: 'ml', child: Text('Malayalam (മലയാളം)')),
+                    DropdownMenuItem(
+                        value: 'es', child: Text('Spanish (Español)')),
+                    DropdownMenuItem(
+                        value: 'fr', child: Text('French (Français)')),
+                    DropdownMenuItem(
+                        value: 'de', child: Text('German (Deutsch)')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() => _defaultTranslationLang = val);
+                      _storage.setDefaultTranslationLang(val);
+                    }
+                  },
+                ),
+              ),
+              const Divider(height: 1),
+              ListTile(
                 leading:
                     const Icon(Icons.key_rounded, color: AppColors.primary),
                 title: Text('Google Gemini API Key', style: _titleStyle),
@@ -286,6 +448,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   setState(() => _autoSave = val);
                   _storage.setAutoSave(val);
                 },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading:
+                    const Icon(Icons.tune_rounded, color: AppColors.primary),
+                title: Text('Default Compression Preset', style: _titleStyle),
+                subtitle: Text(_getCompressionName(_defaultCompressionPreset),
+                    style: _subStyle),
+                trailing: DropdownButton<String>(
+                  value: _defaultCompressionPreset,
+                  underline: const SizedBox.shrink(),
+                  items: const [
+                    DropdownMenuItem(
+                        value: 'low', child: Text('Low (High Quality)')),
+                    DropdownMenuItem(
+                        value: 'medium', child: Text('Medium (Recommended)')),
+                    DropdownMenuItem(
+                        value: 'high', child: Text('High (Max Savings)')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() => _defaultCompressionPreset = val);
+                      _storage.setDefaultCompressionMode(val);
+                    }
+                  },
+                ),
               ),
             ]),
             const SizedBox(height: 24),
@@ -359,6 +547,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     text:
                         'VertexDocs - Complete PDF Suite & AI Assistant for Android by JM Vertex Technologies.',
                   );
+                },
+              ),
+            ]),
+            const SizedBox(height: 24),
+
+            // Account & Session
+            _buildSectionHeader('ACCOUNT'),
+            _buildSettingsGroup([
+              ListTile(
+                leading:
+                    const Icon(Icons.logout_rounded, color: AppColors.error),
+                title: Text('Log Out',
+                    style: _titleStyle.copyWith(color: AppColors.error)),
+                subtitle: Text('Sign out of your VertexDocs account',
+                    style: _subStyle),
+                onTap: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (dCtx) => AlertDialog(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18)),
+                      title: Text(
+                        'Log Out',
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
+                      ),
+                      content: const Text(
+                          'Are you sure you want to log out of VertexDocs?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dCtx, false),
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.error,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () => Navigator.pop(dCtx, true),
+                          child: const Text('Log Out'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    await AuthService().logout();
+                  }
                 },
               ),
             ]),
